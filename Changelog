@@ -1,0 +1,375 @@
+  Office_Weather_1C
+    05/05 Add OTA support
+    D - OTA done and testedz
+    Weather_OTA_Gen_1 Add MQTT support
+    Then add MQTT supportfF
+    05/11/2017
+    MQTT support and Node REd added, also OTA.
+    06/07/2017 Attempt to turn LCD off with MQTT using pin D5 = GPIO14. Next loop at Sleep functions
+    06/28/2017 "G" try moving system publis to setup so it does not get published every loop
+
+    Switching to Wemos so moving pins around
+
+    07/16/2017 Trents_Office_WemoE
+    Added state machine for lcdState and changed millis to 60000 (60 seconds)
+    Next (F) add NTP functionality and then Deep Sleep
+    Have a working generic NTP program that prints time and uptime, Now to integegrae
+
+    08/26/2017 Trents_Office_Msleep1C
+    Added modem sleep 1 minute, now add pushBTTN_PIN to turn on LCD for 10 seconds
+    maybe later change to proximity sensor
+
+    09/26/2017 Adding 220k resistor for VCC measurement off of ADC. Batt -> 220K -> ADC
+    Batter Level = Analogread(A0) / Adjustment
+
+    10/07/2017  moved publish humidity etc above freeheap , otherwise it got set to 0 ?
+
+
+    10/16/2017 - start moving to using millis for delay lke SR_WiFi_NewChipMillisG
+
+    10/19/2017 - Memory leak "fixed" by not stoping/restarting ntp every time modem sleeps/wakes. Simply
+    connect wifi 1st in startup and then start NTP. Currently not using wifi events (connect/disconnect)
+    but will ad some. Next steps:
+    1 - re-write code to be more clear
+    2 - add events
+    3 - add cuircutry and code to read charger status
+    4 - add circutry and code for push BTTN_PIN (proximity sensor?)
+
+    10/19/2017 Ver Msleep1J-B. Optimized some, just gained about 200K heap! Moving to
+    Ver MsleepiJ-C for more optimation.
+
+    In MsleepiJ-C had to fix float getBatteryLevel() , move back to couple versions prior
+    10/19/2017 - that worked, batt level now working again. Moving to MsleepiJ-D
+
+    MsleepiJ-D worked great, creating iJ-E to further code clean up
+    MsleepiJ-E - Big heap saving improvments, looking for more!
+    Msleep1J-G - 10/23/2017 - moving to Ver H to implement Millis for sleep, based on SR_Wifi_Test5_Lab_newchip
+ *  *   10/26
+    Just now implementing Millis into Ver H, though BTTN_PIN push for an led is working in
+    BTTN_PIN_millis1.
+
+    Msleep1J-H - issues with sleeptime, seems to start at ~ 20 secs, moveing to J-I
+
+    10/31/2017 - MsleepIJ-I working well, free heap at 40992. Moving to J -J to see if moving
+    sleep to start of loop as now it is at bottom of loop as millis sleep time is not quite right
+    on. In setup, display, publish and print all reading once then set flag to false.
+
+    Side note, should get each sensor data a publish rather then get it all in one big
+    blog to save heap.
+
+    11/02/2017 - creating K version, looks like several versions got posted in the same folder
+
+    "K" works fine with a 5 sec miss after takeing readings. Use K as the "golden" before
+    changing  to publish once in setup, start loop with flag set to "time to sleep"
+
+    IDEA**** only do get lcdDisplayTemps when BTTN_PIN pushed. maybe try init and stop in same
+    function
+
+    11/02/2017 - changing focus to push BTTN_PIN for lcc
+
+    11/03/2017 -  Version M (L still unchanged) LCD push BTTN_PIN working, now need to
+    store last readings when wifi was up to display. Creating VN to do that. Looks like VM
+    has same heap footprint which is good.
+
+    11/05/2017 - Version N working with push BTTN_PIN (commented out local vars outTmpFString
+    and tubTempFString in publishTemps or whatever and used global copies. Need to do code clean up,
+     add pin reading for batt charging status and proximity sensor
+
+     11/05/2017 - Creating Version 0 for code cleanup, then add batt charging status. Will prototype
+     proximety sensor on another board
+
+     11/05/2017 - V-O fine with code cleanup. Heap increased from 41320 to 41384 by
+     removing a couple globals. Moving to V-P for batt charge status
+
+     11/05/2017 - OTA worked for uploading to ver P. Now adding mqtt stuff for batt charge status
+     TbOfficeClient/PWR - indicates if power is supplied to the charger (solar, usb, external)
+     TbOfficeClient/CHRG - indicates current charging status. Also as low batt level, lights up if
+     batt volt drops below 3.1 when no charging ciruit working (ie nighttime)
+     TbOfficeClient/Done - indicates when baterry is fully charged
+
+     11/06/2017 - Ver Q, starting battery charging read and publish
+
+     112/02/2017 - Ver QC working great! Been playing with using an ultrasonic sensor instead of push
+     BTTN_PIN for lcd on/off and using transistor 2n2222 to switch ultra sound sensor off/on and another
+     one to switch lcd on/off. Working test sketch is BTTN_PIN_milis_plus_distance_J.
+
+     Starting Ver Trents_Office_MsleepK (small leap in versioning) to include above changes. This will take
+     4 pins, two for the distance sensor and 2 for the two transistors which will leave with no pins availiable
+     Looking at
+     A: use esp32 with more pins, better sleep options (and better overall1)
+     B:Create separate sensor system for tub temp/on/off
+     C:Reclaim a pin by running onwire data over power pin
+
+     For now do pin allocation
+     Current:
+     1 = DNE_PIN // Batt Charge state
+   D2 = #define ONEB_PIN D2 // One wire bus
+   D3 = const int PWR_PIN = D3;   // Indicates if power is being supplied to charger board
+   D6 = SCL pin
+   D7 = SDA pin
+   D8 = BTTN_PIN pin // can be re-purposed
+
+   Open
+    D0
+   D4
+   D5
+   D8 // Currently BTTN_PIN pin
+
+   Build new board? Not now
+   Steps
+   1: switch out wiring harnes for lcd2
+    2: Allocate pins
+      D0 = gate pin for Sensor transistor
+      D4 = gate pin for LCD transitor - D4 is onboard LED, keep it off as long as possible
+      D8 - TRIG pin for sensor
+      D5 - Echo Pin for sensor
+
+    3: Add reset pin BTTN_PIN for stick pin reset
+
+  V_L  Temp build to use 2pn2222 transitor for LCD, still use BTTN_PIN
+  MOP for transitioning TB_Office to using transistor switchs for LCD on/off and ultrasound sendor
+  
+  1st, keep pushBTTN_PIN and change LCD to use I) pin for power
+  
+  Step 1: Temp set D0 = gate pin for LCD (current BTTN_PIN pin is D8)
+  Step 2: BTTN_PIN Push stuff is in main loop, maybe just change lcdOn and lcdOff ?
+
+  12/10/2017 - Ver L working now that I swapped out the D1 mini and replaced a worn wire.
+  Now swap D0 for D4
+
+  LCE gate pin on D4  works fine. Saveing as Ver L_Save and move to Ver M, first wire up 
+  ultrasound sensor then ?
+
+  12/10.2017 - Ver M. Added CheckDistance()
+
+  12/10/2017 - Ver M. Added Sonar sensor working,  changed pinouts to:
+      D0 = gate pin for Sensor transistor
+      D2 = gate pin for LCD transitor 
+      D8 - TRIG pin for sensor
+      D5 - Echo Pin for sensor
+      D4 - Now = One wire data pin!
+
+    12/10/2017 - Ver N, Adding Ultrasound sensor logic
+
+   12/15/2017 - Ver N works, but ultrasound sensor not quite activating LCD. Creating O to 
+   debug,
+   Current Pin layout:
+         D1 - DNE pin (for battery charge status)
+         D2 - LCD gate pin
+         D3 - PWR pin (for batter charge status)
+         D4 - One Wire Sensors Bus, note it blinks when sensors are active
+         D0 - USS gate pin
+         D5 - USS Echo 
+         D6 - I2C
+         D7 - I2C
+         D8 - USS TRIG / BTTN_PIN pin
+
+     Creating Ver O to rearrange these so that sensor pins are postition together
+     Swap D8 and D0 so that USS echo/TRIG are together. 
+   Next layout:
+         D1 - DNE pin (for battery charge status)
+         D2 - LCD gate pin
+         D3 - PWR pin (for batter charge status)
+         D4 - One Wire Sensors Bus, note it blinks when sensors are active
+         D0 - USS TRIG
+         D5 - USS Echo 
+         D6 - I2C
+         D7 - I2C
+         D8 - USS gate pin / BTTN_PIN pin
+
+    Better pin out, put all Batt and charg pins together, gate pins together
+
+     Current Pin Layout:
+    
+        D4 - 1 Wire buss   D8 - USS Trig
+        D3 - CHR PIN       D7 - I2C
+        D2 - LCD GATE pIN  D6 - I2C
+        D1 - DNE (Charge)  D5 - USS echo
+                           D0 - USS GATE pin
+                           A0 - Batt ChargeS
+
+       Proposed Pin Layout:
+ 
+        D4 - LCD Gate   D8 - I2C buss
+        D3 - USS Gate   D7 - I2C buss
+        D2 - USS Trig   D6 - 1 Wire buss
+        D1 - USS Echo   D5 - CHR (charging status)
+                        D0 - DNE (Charging Done/Not Done)
+                        A0 - Batt ChargeS
+
+   
+
+    Steps:
+       1: Swap One Wire buss pin with I2c pin
+               D4 and D6
+                      D4 - I2C  D8 - USS Trig
+                      D3 - CHR PIN       D7 - I2C
+                      D2 - LCD GATE pIN  D6 -1 Wire buss
+                      D1 - DNE (Charge)  D5 - USS echo
+                                         D0 - USS GATE pin
+                                         A0 - Batt ChargeS 
+        2: Swap Chg pin with USS Echo
+                D3 and D5
+        3: Swap LCD Gate pin with USB Trig
+                D2 and D8   
+        4: Swap DNE pin with D0 USS Gate Pin
+                 D1 and D0
+        5: Swap D2 with D4
+         6: Swap 
+
+  12/19
+      Almost there with ifdefs. For pubsub publish, going to try just using 
+      client.publish("topic","message"), rather then current 
+      client.publish("/client/topic","message");
+      Using "Version" for fist test
+
+
+  01/02
+    client/topic not working yet, need to debug
+    swapped transistors emitor for collector, sorking fine now
+    Need to:
+      1: Figure out why D4 does not work for LCD
+      2: Work out issue with LCD display bme issues - need to make globals?
+      3: Weed out more if/deffs we can use
+      4: Why does this version that uses one less one-wire sensor use more memory?
+      5: Try OTA againS
+      6: figure out lcd delay stuff - look at FIXME
+      7: use ifdef to comment out serial print if not using serial
+
+  01/08.2018
+      Back working again in Vc except for bme temp and humidity are off, looks like timeing
+      creating Ver D to debug
+  01/08/2018
+      Everything started working again. New pin arraingement. Will look at putting more ifdef's into VerE
+      especially for Serial Print to reduce memory footprint.
+
+  01/17/2018
+      1: Still getting sporadic BME readings with this ver, but not with TBoffice - PRIORITY
+      2: For mqtt publish, going to try this on TbOffice
+          #ifdef TbOfficeClient
+          #define client "TbOfficeClient"
+          #endif
+          #ifdef WemosTest
+          #define client "WemostTest"
+          #endif
+          etc
+     01/18/2018
+          1: Added Terminal blocks for Vin to solderess breadboad - HUGE difference
+          now reading 4.12 V multimeter and 3.89 on mqtt guage. Have to adust accordinly.
+          Would someting simular help with sporadic  BME readings? Test, disconnect bmd vcc?
+
+      01/19/2018
+          Vcc started looking alright this afternoon, will look at it more tomorrow
+          added publish sleeptime.
+
+      01/30/2018
+          New layout works for test, this version (F) is to try moving TB office to this layout
+
+          02/01/2018 New_Build_G to try client.connect
+       02/01/2018 Decided to try this
+       1: declare String Client
+       #ifdef TbOffice
+         Client = String("TbOffice\")
+       #elif Wemos
+         Client = String("WemosClient\"
+       #endif
+
+       then outmessage = Client + "Version";
+       client.publish(Client, version)'
+
+      02/04/2018
+        PubSub uses a char array
+        
+      02/08/2018  I can do this inline with srcpy and strcat but not in a function so far
+      issues with my knowledge of char* vs char[] so Ver H being created to explore this
+
+      What does not work:
+      
+*************************************************************************************
+ *    takes two args, client and topic
+ *    client = ahostname
+ *    topic = the topic to publish
+ *    
+ *************************************************************************************
+void publishTopic(char topic[])
+{
+  char Topic[32];       // Make it big enough
+  //char* Topic = ahostname;
+
+  //strcpy(Topic, client);
+  strcpy(Topic, Client);
+  strcat(Topic, topic);
+  client.publish(Topic, topic);
+  
+}
+
+
+ But this does
+ //Topic = makeTopic("Hostname");
+  strcpy(Topic,Client);
+  strcat(Topic, "Hostname");
+  client.publish(Topic, ahostname);
+  //client.publish("/TbOfficeClient/Hostname", ahostname);
+  strcpy(Topic,Client);
+  strcat(Topic, "IP");fADC
+  client.publish(Topic,  WiFi.localIP().toString().c_str());
+  //client.publish("/TbOfficeClient/IP", WiFi.localIP().toString().c_str());
+  strcpy(Topic,Client);
+  strcat(Topic, "IP");
+  client.publish(Topic, WiFi.macAddress().c_str());
+  //client.publish("/TbOfficeClient/MAC", WiFi.macAddress().c_str());
+
+
+ 02/10/2018
+ create New_Build_1I
+ Not getting far with creating function to 
+  1: Make all like this
+  strcpy(Topic, Client);
+  strcat(Topic, "Version");
+  client.publish(Topic, Version)
+
+  So for now make all pubs look like this
+  strcpy(Topic, Client);
+  strcat(Topic, "Version");
+   and be sure to remove "/" from NodeRed
+
+   So search for client.publish and change to 
+   local char Topic[32];
+   strcpy(Topic, Client);
+    strcat(Topic, "Version");
+    client.publish(Topic, "whatever"
+
+ 03/10/2018
+   Conversion completed and now have two working soldered boards which holds batt 
+   power very well and no random crashes.
+   Next:
+     1: Add ability to change sleep time etc via mqtt
+     2: Decide if transistor switches are really necessary since solder boards are 
+     so energy thrifty. 
+     3: Swap bat charged pin with one of transisor pins so onboard LED not lit  when 
+     charged
+     4: write config files to flash in json format
+     5: if remove switch pins add other sensors or e-ink
+
+  03/10/2018
+     Version K started to work with change sleep time. Also changed notes on github
+
+ 05/22/2018
+     Version New_Build_1K_O: Change sleeptime working well with callback version that uses topic(String blah)
+     just changed it to topic char* and added this
+
+      //if (topic == "wemosTestClient/setSleepTime") {
+    ret = strstr(topic, "setSleepTime");
+    if (!strcmp("setSleepTime", ret)){
+   // if(topic.substring(12) = "setSleepTime"){
+    Serial.println(F("!!!*** Matched on setSleepTime ********!!!"));
+    Serial.print(F("Current sleeptime = "));
+    Serial.println(sleeptime);
+    Serial.print(F("changing sleeptime to: "));
+    for (int i = 0; i < length; i++) {
+        sleepTime[i] = (char)message[i];
+        count++;
+     }
+
+     to use string operations instead of String. Might bring back a little memory
+     Getting occasional crashes in 12c which I don't think are related but will keep an eye on it
