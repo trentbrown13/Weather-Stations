@@ -373,3 +373,29 @@ void publishTopic(char topic[])
 
      to use string operations instead of String. Might bring back a little memory
      Getting occasional crashes in 12c which I don't think are related but will keep an eye on it
+     
+     09/11/2018
+     Since last changelog update, have added upgrade ability via http/php. NodeRed switch "upgrade" has to be turned on and upgrade
+     process begins. If a new version is on the server (checked via .version file) upgrade is initiated, otherwise it is not. Node Red UI 
+     upgrade switch is moved to "off" position in callback function. Plan is to implement the same for "manufacturing/callibration" settings
+     but will wait until config file (json) is implemented, otherwise compile times settings will overide when rebooted unless manufacturing
+     mode is enabled.
+     
+     Also, new board design removing npm transistors and moving D4 from charging circuit as it is also the  onbaoard led and was on 
+     when battery was charged.
+     
+     /************************ NEW PIN DEFINITIONS **************************************
+  //  Both npn gates are not being used so remove them freeing up pins D0 and D5
+  // D4 was  used batt charge status but it is also the internal led pin
+  // Now use D0 for batt charge status (to row 20) and route D04 to opposite row 20) and D5 to row 21
+  // for future use
+  static const byte DNE_PIN =  D0;     //  Batt Charged yes/no was D0
+  //static const byte DST_PIN =  D5;   // Not used, Terminated on row 22
+  static const byte SCL_PIN =  D1;     // i2c SCL
+  static const byte SDA_PIN =  D2;     // i2c SDA
+  static const byte ECHO_PIN = D7;     // USS ECHO Pin
+  static const byte TRIG_PIN = D8;     // USS TRIG Pin
+  static const byte ONEB_PIN = D6;     // One Wir e buss 4.75K ohm resistor
+  static const byte PWR_PIN =  D3;     // Batt Charging yes/no was D0
+  //static const byte DNE_PIN =  D4;     // Not used, terminated on row 20
+  static const byte BATT_PIN = A0;     // Batt Level 220k ohm resistor
