@@ -375,6 +375,7 @@ void publishTopic(char topic[])
      Getting occasional crashes in 12c which I don't think are related but will keep an eye on it
      
      09/11/2018
+     VER 0007
      Since last changelog update, have added upgrade ability via http/php. NodeRed switch "upgrade" has to be turned on and upgrade
      process begins. If a new version is on the server (checked via .version file) upgrade is initiated, otherwise it is not. Node Red UI 
      upgrade switch is moved to "off" position in callback function. Plan is to implement the same for "manufacturing/callibration" settings
