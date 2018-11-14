@@ -400,3 +400,12 @@ void publishTopic(char topic[])
   static const byte PWR_PIN =  D3;     // Batt Charging yes/no was D0
   //static const byte DNE_PIN =  D4;     // Not used, terminated on row 20
   static const byte BATT_PIN = A0;     // Batt Level 220k ohm resistor
+
+11/13/2018
+V 0.0.0.708
+1: Version now uses a "." for a seperator and a functoin created to parse the version string
+2: Callibrating mode implemented whee it has to be enbabled before sensor callibration can be performed/changed
+3: Sleeptime, ADC_ADJUST and maxPingDistance can now be callibrated
+
+
+
