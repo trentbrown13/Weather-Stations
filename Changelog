@@ -407,5 +407,8 @@ V 0.0.0.708
 2: Callibrating mode implemented whee it has to be enbabled before sensor callibration can be performed/changed
 3: Sleeptime, ADC_ADJUST and maxPingDistance can now be callibrated
 
-
+12/17/2018
+V 0.0.0.708.1B
+1: LCD display is now real time instead of only updateing when wifi is active
+2: Minor improvments
 
