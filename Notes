@@ -1,0 +1,14 @@
+12/17/2018
+Should be ready for V0.0.0.709
+Next:
+    1: Finish callibration
+    2: Clean up Node Red display to be consistent. Look at using a template - should be a simple find/replace in the json file?
+    3: Add Deep Sleep if Batt Voltage is to low
+      1: Free up D0 by swapping D0 and D5 (currently open); D0 and D5 are next door, RST is one removed from D0
+      2: Connect D0 with RST
+      3: Declare int deepSleepTime - time in seconds to sleep, can be changed in Node Red
+      4: Declare int deepSleepVoltage - lowest voltage reading before deep sleep kicks in
+      4: In setup
+	      a) take sensor readings and publish
+	      b) If ADC reading  is < deepSleepVoltage
+		        ESP.deepSleep(deepSleeptime * 1000000);
